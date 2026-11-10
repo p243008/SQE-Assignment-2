@@ -1,0 +1,692 @@
+============================= test session starts ==============================
+platform linux -- Python 3.14.4, pytest-9.0.2, pluggy-1.6.0
+rootdir: /home/wahid/SQE-Assignment-2
+plugins: cov-7.1.0, typeguard-4.4.4
+collected 74 items
+
+tests/test_blackbox.py .F....F.........FF...F.F..FF.F................FFF [ 66%]
+...FF.                                                                   [ 74%]
+tests/test_whitebox.py ........s......s...                               [100%]
+
+=================================== FAILURES ===================================
+__________ test_check_credit_limit_returns[BVA-03_exactly_18_allowed] __________
+
+current = 17, new = 1, expected = True, tag = 'BVA-03'
+
+    @pytest.mark.parametrize(
+        "current, new, expected, tag",
+        [
+            (10, 3, True, "ECP-01"),
+            (17, 1, True, "BVA-03"),
+            (18, 1, False, "BVA-04"),
+            (10, 1, True, "BVA-07"),
+            (10, 4, True, "BVA-08"),
+            (0, 1, True, "BVA-17"),
+            (14, 4, True, "BVA-18"),
+            (15, 4, False, "BVA-19"),
+        ],
+        ids=[
+            "ECP-01_valid_10+3",
+            "BVA-03_exactly_18_allowed",
+            "BVA-04_just_over_19",
+            "BVA-07_min_new_1",
+            "BVA-08_max_new_4",
+            "BVA-17_zero_plus_one",
+            "BVA-18_fourteen_plus_four",
+            "BVA-19_fifteen_plus_four",
+        ],
+    )
+    def test_check_credit_limit_returns(current, new, expected, tag):
+        """FR-01: current + new <= 18 -> True, otherwise False."""
+>       assert check_credit_limit(current, new) is expected, tag
+E       AssertionError: BVA-03
+E       assert False is True
+E        +  where False = check_credit_limit(17, 1)
+
+tests/test_blackbox.py:95: AssertionError
+__________ test_check_credit_limit_returns[BVA-18_fourteen_plus_four] __________
+
+current = 14, new = 4, expected = True, tag = 'BVA-18'
+
+    @pytest.mark.parametrize(
+        "current, new, expected, tag",
+        [
+            (10, 3, True, "ECP-01"),
+            (17, 1, True, "BVA-03"),
+            (18, 1, False, "BVA-04"),
+            (10, 1, True, "BVA-07"),
+            (10, 4, True, "BVA-08"),
+            (0, 1, True, "BVA-17"),
+            (14, 4, True, "BVA-18"),
+            (15, 4, False, "BVA-19"),
+        ],
+        ids=[
+            "ECP-01_valid_10+3",
+            "BVA-03_exactly_18_allowed",
+            "BVA-04_just_over_19",
+            "BVA-07_min_new_1",
+            "BVA-08_max_new_4",
+            "BVA-17_zero_plus_one",
+            "BVA-18_fourteen_plus_four",
+            "BVA-19_fifteen_plus_four",
+        ],
+    )
+    def test_check_credit_limit_returns(current, new, expected, tag):
+        """FR-01: current + new <= 18 -> True, otherwise False."""
+>       assert check_credit_limit(current, new) is expected, tag
+E       AssertionError: BVA-18
+E       assert False is True
+E        +  where False = check_credit_limit(14, 4)
+
+tests/test_blackbox.py:95: AssertionError
+_____________ test_prerequisites_satisfied[ECP-06_partial_missing] _____________
+
+completed = {'CS101'}, required = {'CS101', 'MATH101'}, expected = False
+tag = 'ECP-06'
+
+    @pytest.mark.parametrize(
+        "completed, required, expected, tag",
+        [
+            (set(), set(), True, "ECP-04"),
+            ({"CS101"}, {"CS101"}, True, "ECP-05"),
+            ({"CS101"}, {"CS101", "MATH101"}, False, "ECP-06"),
+        ],
+        ids=[
+            "ECP-04_no_required",
+            "ECP-05_single_met",
+            "ECP-06_partial_missing",
+        ],
+    )
+    def test_prerequisites_satisfied(completed, required, expected, tag):
+        """FR-03: True iff every required course is completed; empty -> True."""
+>       assert prerequisites_satisfied(completed, required) is expected, tag
+E       AssertionError: ECP-06
+E       assert True is False
+E        +  where True = prerequisites_satisfied({'CS101'}, {'CS101', 'MATH101'})
+
+tests/test_blackbox.py:145: AssertionError
+_____ test_registration_decision_status[ECP-07__BVA-11__DT-01_dues_blocks] _____
+
+student = Student(student_id='S1', completed_courses=set(), current_credits=0, outstanding_dues=1, registered_courses=set())
+course = Course(code='C1', credit_hours=3, capacity=10, enrolled=0, prerequisites=set(), waitlist=[])
+expected = 'DUES_BLOCK', tag = 'ECP-07__BVA-11__DT-01'
+
+    @pytest.mark.parametrize(
+        "student, course, expected, tag",
+        [
+            (make_student(outstanding_dues=1), make_course(enrolled=0),
+             "DUES_BLOCK", "ECP-07__BVA-11__DT-01"),
+            (make_student(outstanding_dues=0), make_course(enrolled=0),
+             "REGISTERED", "BVA-10__BVA-22"),
+            (make_student(registered_courses={"C1"}), make_course(enrolled=0),
+             "ALREADY_REGISTERED", "ECP-09__DT-02"),
+            (make_student(), make_course(enrolled=0, prerequisites={"CS101"}),
+             "PREREQUISITES_MISSING", "ECP-13__DT-03"),
+            (make_student(completed_courses={"CS101"}),
+             make_course(enrolled=0, prerequisites={"CS101", "MATH101"}),
+             "PREREQUISITES_MISSING", "DT-12"),
+            (make_student(current_credits=16), make_course(enrolled=0),
+             "CREDIT_LIMIT", "ECP-14__DT-04"),
+            (make_student(), make_course(capacity=10, enrolled=10),
+             "WAITLISTED", "ECP-10__BVA-16__DT-05"),
+            (make_student(), make_course(capacity=10, enrolled=9),
+             "REGISTERED", "ECP-11__BVA-15__DT-06"),
+            (make_student(), make_course(capacity=1, enrolled=0),
+             "REGISTERED", "BVA-20"),
+            (make_student(), make_course(capacity=1, enrolled=1),
+             "WAITLISTED", "BVA-21"),
+            (make_student(current_credits=15), make_course(enrolled=0),
+             "REGISTERED", "DT-11"),
+            (make_student(completed_courses={"CS101", "MATH101"}),
+             make_course(enrolled=0, prerequisites={"CS101", "MATH101"}),
+             "REGISTERED", "DT-13"),
+            (make_student(outstanding_dues=1, registered_courses={"C1"}),
+             make_course(enrolled=0),
+             "DUES_BLOCK", "DT-07"),
+            (make_student(registered_courses={"C1"}),
+             make_course(enrolled=0, prerequisites={"CS101"}),
+             "ALREADY_REGISTERED", "DT-08"),
+            (make_student(current_credits=16),
+             make_course(enrolled=0, prerequisites={"CS101"}),
+             "PREREQUISITES_MISSING", "DT-09"),
+            (make_student(current_credits=16),
+             make_course(capacity=10, enrolled=10),
+             "CREDIT_LIMIT", "DT-10"),
+        ],
+        ids=[
+            "ECP-07__BVA-11__DT-01_dues_blocks",
+            "BVA-10__BVA-22_zero_dues_register",
+            "ECP-09__DT-02_already_registered",
+            "ECP-13__DT-03_missing_prereq",
+            "DT-12_partial_prereq_missing",
+            "ECP-14__DT-04_credit_limit",
+            "ECP-10__BVA-16__DT-05_waitlisted",
+            "ECP-11__BVA-15__DT-06_registered",
+            "BVA-20_capacity1_enrolled0",
+            "BVA-21_capacity1_enrolled1",
+            "DT-11_fifteen_plus_three_registered",
+            "DT-13_all_prereqs_met",
+            "DT-07_dues_and_dup",
+            "DT-08_dup_and_missing_prereq",
+            "DT-09_prereq_and_credit",
+            "DT-10_credit_and_full",
+        ],
+    )
+    def test_registration_decision_status(student, course, expected, tag):
+        """FR-04..FR-09: decision statuses, priority order, and BVA boundaries."""
+>       assert registration_decision(student, course) == expected, tag
+E       AssertionError: ECP-07__BVA-11__DT-01
+E       assert 'REGISTERED' == 'DUES_BLOCK'
+E         
+E         - DUES_BLOCK
+E         + REGISTERED
+
+tests/test_blackbox.py:215: AssertionError
+_______ test_registration_decision_status[DT-12_partial_prereq_missing] ________
+
+student = Student(student_id='S1', completed_courses={'CS101'}, current_credits=0, outstanding_dues=0, registered_courses=set())
+course = Course(code='C1', credit_hours=3, capacity=10, enrolled=0, prerequisites={'MATH101', 'CS101'}, waitlist=[])
+expected = 'PREREQUISITES_MISSING', tag = 'DT-12'
+
+    @pytest.mark.parametrize(
+        "student, course, expected, tag",
+        [
+            (make_student(outstanding_dues=1), make_course(enrolled=0),
+             "DUES_BLOCK", "ECP-07__BVA-11__DT-01"),
+            (make_student(outstanding_dues=0), make_course(enrolled=0),
+             "REGISTERED", "BVA-10__BVA-22"),
+            (make_student(registered_courses={"C1"}), make_course(enrolled=0),
+             "ALREADY_REGISTERED", "ECP-09__DT-02"),
+            (make_student(), make_course(enrolled=0, prerequisites={"CS101"}),
+             "PREREQUISITES_MISSING", "ECP-13__DT-03"),
+            (make_student(completed_courses={"CS101"}),
+             make_course(enrolled=0, prerequisites={"CS101", "MATH101"}),
+             "PREREQUISITES_MISSING", "DT-12"),
+            (make_student(current_credits=16), make_course(enrolled=0),
+             "CREDIT_LIMIT", "ECP-14__DT-04"),
+            (make_student(), make_course(capacity=10, enrolled=10),
+             "WAITLISTED", "ECP-10__BVA-16__DT-05"),
+            (make_student(), make_course(capacity=10, enrolled=9),
+             "REGISTERED", "ECP-11__BVA-15__DT-06"),
+            (make_student(), make_course(capacity=1, enrolled=0),
+             "REGISTERED", "BVA-20"),
+            (make_student(), make_course(capacity=1, enrolled=1),
+             "WAITLISTED", "BVA-21"),
+            (make_student(current_credits=15), make_course(enrolled=0),
+             "REGISTERED", "DT-11"),
+            (make_student(completed_courses={"CS101", "MATH101"}),
+             make_course(enrolled=0, prerequisites={"CS101", "MATH101"}),
+             "REGISTERED", "DT-13"),
+            (make_student(outstanding_dues=1, registered_courses={"C1"}),
+             make_course(enrolled=0),
+             "DUES_BLOCK", "DT-07"),
+            (make_student(registered_courses={"C1"}),
+             make_course(enrolled=0, prerequisites={"CS101"}),
+             "ALREADY_REGISTERED", "DT-08"),
+            (make_student(current_credits=16),
+             make_course(enrolled=0, prerequisites={"CS101"}),
+             "PREREQUISITES_MISSING", "DT-09"),
+            (make_student(current_credits=16),
+             make_course(capacity=10, enrolled=10),
+             "CREDIT_LIMIT", "DT-10"),
+        ],
+        ids=[
+            "ECP-07__BVA-11__DT-01_dues_blocks",
+            "BVA-10__BVA-22_zero_dues_register",
+            "ECP-09__DT-02_already_registered",
+            "ECP-13__DT-03_missing_prereq",
+            "DT-12_partial_prereq_missing",
+            "ECP-14__DT-04_credit_limit",
+            "ECP-10__BVA-16__DT-05_waitlisted",
+            "ECP-11__BVA-15__DT-06_registered",
+            "BVA-20_capacity1_enrolled0",
+            "BVA-21_capacity1_enrolled1",
+            "DT-11_fifteen_plus_three_registered",
+            "DT-13_all_prereqs_met",
+            "DT-07_dues_and_dup",
+            "DT-08_dup_and_missing_prereq",
+            "DT-09_prereq_and_credit",
+            "DT-10_credit_and_full",
+        ],
+    )
+    def test_registration_decision_status(student, course, expected, tag):
+        """FR-04..FR-09: decision statuses, priority order, and BVA boundaries."""
+>       assert registration_decision(student, course) == expected, tag
+E       AssertionError: DT-12
+E       assert 'REGISTERED' == 'PREREQUISITES_MISSING'
+E         
+E         - PREREQUISITES_MISSING
+E         + REGISTERED
+
+tests/test_blackbox.py:215: AssertionError
+_____ test_registration_decision_status[ECP-10__BVA-16__DT-05_waitlisted] ______
+
+student = Student(student_id='S1', completed_courses=set(), current_credits=0, outstanding_dues=0, registered_courses=set())
+course = Course(code='C1', credit_hours=3, capacity=10, enrolled=10, prerequisites=set(), waitlist=[])
+expected = 'WAITLISTED', tag = 'ECP-10__BVA-16__DT-05'
+
+    @pytest.mark.parametrize(
+        "student, course, expected, tag",
+        [
+            (make_student(outstanding_dues=1), make_course(enrolled=0),
+             "DUES_BLOCK", "ECP-07__BVA-11__DT-01"),
+            (make_student(outstanding_dues=0), make_course(enrolled=0),
+             "REGISTERED", "BVA-10__BVA-22"),
+            (make_student(registered_courses={"C1"}), make_course(enrolled=0),
+             "ALREADY_REGISTERED", "ECP-09__DT-02"),
+            (make_student(), make_course(enrolled=0, prerequisites={"CS101"}),
+             "PREREQUISITES_MISSING", "ECP-13__DT-03"),
+            (make_student(completed_courses={"CS101"}),
+             make_course(enrolled=0, prerequisites={"CS101", "MATH101"}),
+             "PREREQUISITES_MISSING", "DT-12"),
+            (make_student(current_credits=16), make_course(enrolled=0),
+             "CREDIT_LIMIT", "ECP-14__DT-04"),
+            (make_student(), make_course(capacity=10, enrolled=10),
+             "WAITLISTED", "ECP-10__BVA-16__DT-05"),
+            (make_student(), make_course(capacity=10, enrolled=9),
+             "REGISTERED", "ECP-11__BVA-15__DT-06"),
+            (make_student(), make_course(capacity=1, enrolled=0),
+             "REGISTERED", "BVA-20"),
+            (make_student(), make_course(capacity=1, enrolled=1),
+             "WAITLISTED", "BVA-21"),
+            (make_student(current_credits=15), make_course(enrolled=0),
+             "REGISTERED", "DT-11"),
+            (make_student(completed_courses={"CS101", "MATH101"}),
+             make_course(enrolled=0, prerequisites={"CS101", "MATH101"}),
+             "REGISTERED", "DT-13"),
+            (make_student(outstanding_dues=1, registered_courses={"C1"}),
+             make_course(enrolled=0),
+             "DUES_BLOCK", "DT-07"),
+            (make_student(registered_courses={"C1"}),
+             make_course(enrolled=0, prerequisites={"CS101"}),
+             "ALREADY_REGISTERED", "DT-08"),
+            (make_student(current_credits=16),
+             make_course(enrolled=0, prerequisites={"CS101"}),
+             "PREREQUISITES_MISSING", "DT-09"),
+            (make_student(current_credits=16),
+             make_course(capacity=10, enrolled=10),
+             "CREDIT_LIMIT", "DT-10"),
+        ],
+        ids=[
+            "ECP-07__BVA-11__DT-01_dues_blocks",
+            "BVA-10__BVA-22_zero_dues_register",
+            "ECP-09__DT-02_already_registered",
+            "ECP-13__DT-03_missing_prereq",
+            "DT-12_partial_prereq_missing",
+            "ECP-14__DT-04_credit_limit",
+            "ECP-10__BVA-16__DT-05_waitlisted",
+            "ECP-11__BVA-15__DT-06_registered",
+            "BVA-20_capacity1_enrolled0",
+            "BVA-21_capacity1_enrolled1",
+            "DT-11_fifteen_plus_three_registered",
+            "DT-13_all_prereqs_met",
+            "DT-07_dues_and_dup",
+            "DT-08_dup_and_missing_prereq",
+            "DT-09_prereq_and_credit",
+            "DT-10_credit_and_full",
+        ],
+    )
+    def test_registration_decision_status(student, course, expected, tag):
+        """FR-04..FR-09: decision statuses, priority order, and BVA boundaries."""
+>       assert registration_decision(student, course) == expected, tag
+E       AssertionError: ECP-10__BVA-16__DT-05
+E       assert 'REGISTERED' == 'WAITLISTED'
+E         
+E         - WAITLISTED
+E         + REGISTERED
+
+tests/test_blackbox.py:215: AssertionError
+________ test_registration_decision_status[BVA-21_capacity1_enrolled1] _________
+
+student = Student(student_id='S1', completed_courses=set(), current_credits=0, outstanding_dues=0, registered_courses=set())
+course = Course(code='C1', credit_hours=3, capacity=1, enrolled=1, prerequisites=set(), waitlist=[])
+expected = 'WAITLISTED', tag = 'BVA-21'
+
+    @pytest.mark.parametrize(
+        "student, course, expected, tag",
+        [
+            (make_student(outstanding_dues=1), make_course(enrolled=0),
+             "DUES_BLOCK", "ECP-07__BVA-11__DT-01"),
+            (make_student(outstanding_dues=0), make_course(enrolled=0),
+             "REGISTERED", "BVA-10__BVA-22"),
+            (make_student(registered_courses={"C1"}), make_course(enrolled=0),
+             "ALREADY_REGISTERED", "ECP-09__DT-02"),
+            (make_student(), make_course(enrolled=0, prerequisites={"CS101"}),
+             "PREREQUISITES_MISSING", "ECP-13__DT-03"),
+            (make_student(completed_courses={"CS101"}),
+             make_course(enrolled=0, prerequisites={"CS101", "MATH101"}),
+             "PREREQUISITES_MISSING", "DT-12"),
+            (make_student(current_credits=16), make_course(enrolled=0),
+             "CREDIT_LIMIT", "ECP-14__DT-04"),
+            (make_student(), make_course(capacity=10, enrolled=10),
+             "WAITLISTED", "ECP-10__BVA-16__DT-05"),
+            (make_student(), make_course(capacity=10, enrolled=9),
+             "REGISTERED", "ECP-11__BVA-15__DT-06"),
+            (make_student(), make_course(capacity=1, enrolled=0),
+             "REGISTERED", "BVA-20"),
+            (make_student(), make_course(capacity=1, enrolled=1),
+             "WAITLISTED", "BVA-21"),
+            (make_student(current_credits=15), make_course(enrolled=0),
+             "REGISTERED", "DT-11"),
+            (make_student(completed_courses={"CS101", "MATH101"}),
+             make_course(enrolled=0, prerequisites={"CS101", "MATH101"}),
+             "REGISTERED", "DT-13"),
+            (make_student(outstanding_dues=1, registered_courses={"C1"}),
+             make_course(enrolled=0),
+             "DUES_BLOCK", "DT-07"),
+            (make_student(registered_courses={"C1"}),
+             make_course(enrolled=0, prerequisites={"CS101"}),
+             "ALREADY_REGISTERED", "DT-08"),
+            (make_student(current_credits=16),
+             make_course(enrolled=0, prerequisites={"CS101"}),
+             "PREREQUISITES_MISSING", "DT-09"),
+            (make_student(current_credits=16),
+             make_course(capacity=10, enrolled=10),
+             "CREDIT_LIMIT", "DT-10"),
+        ],
+        ids=[
+            "ECP-07__BVA-11__DT-01_dues_blocks",
+            "BVA-10__BVA-22_zero_dues_register",
+            "ECP-09__DT-02_already_registered",
+            "ECP-13__DT-03_missing_prereq",
+            "DT-12_partial_prereq_missing",
+            "ECP-14__DT-04_credit_limit",
+            "ECP-10__BVA-16__DT-05_waitlisted",
+            "ECP-11__BVA-15__DT-06_registered",
+            "BVA-20_capacity1_enrolled0",
+            "BVA-21_capacity1_enrolled1",
+            "DT-11_fifteen_plus_three_registered",
+            "DT-13_all_prereqs_met",
+            "DT-07_dues_and_dup",
+            "DT-08_dup_and_missing_prereq",
+            "DT-09_prereq_and_credit",
+            "DT-10_credit_and_full",
+        ],
+    )
+    def test_registration_decision_status(student, course, expected, tag):
+        """FR-04..FR-09: decision statuses, priority order, and BVA boundaries."""
+>       assert registration_decision(student, course) == expected, tag
+E       AssertionError: BVA-21
+E       assert 'REGISTERED' == 'WAITLISTED'
+E         
+E         - WAITLISTED
+E         + REGISTERED
+
+tests/test_blackbox.py:215: AssertionError
+____ test_registration_decision_status[DT-11_fifteen_plus_three_registered] ____
+
+student = Student(student_id='S1', completed_courses=set(), current_credits=15, outstanding_dues=0, registered_courses=set())
+course = Course(code='C1', credit_hours=3, capacity=10, enrolled=0, prerequisites=set(), waitlist=[])
+expected = 'REGISTERED', tag = 'DT-11'
+
+    @pytest.mark.parametrize(
+        "student, course, expected, tag",
+        [
+            (make_student(outstanding_dues=1), make_course(enrolled=0),
+             "DUES_BLOCK", "ECP-07__BVA-11__DT-01"),
+            (make_student(outstanding_dues=0), make_course(enrolled=0),
+             "REGISTERED", "BVA-10__BVA-22"),
+            (make_student(registered_courses={"C1"}), make_course(enrolled=0),
+             "ALREADY_REGISTERED", "ECP-09__DT-02"),
+            (make_student(), make_course(enrolled=0, prerequisites={"CS101"}),
+             "PREREQUISITES_MISSING", "ECP-13__DT-03"),
+            (make_student(completed_courses={"CS101"}),
+             make_course(enrolled=0, prerequisites={"CS101", "MATH101"}),
+             "PREREQUISITES_MISSING", "DT-12"),
+            (make_student(current_credits=16), make_course(enrolled=0),
+             "CREDIT_LIMIT", "ECP-14__DT-04"),
+            (make_student(), make_course(capacity=10, enrolled=10),
+             "WAITLISTED", "ECP-10__BVA-16__DT-05"),
+            (make_student(), make_course(capacity=10, enrolled=9),
+             "REGISTERED", "ECP-11__BVA-15__DT-06"),
+            (make_student(), make_course(capacity=1, enrolled=0),
+             "REGISTERED", "BVA-20"),
+            (make_student(), make_course(capacity=1, enrolled=1),
+             "WAITLISTED", "BVA-21"),
+            (make_student(current_credits=15), make_course(enrolled=0),
+             "REGISTERED", "DT-11"),
+            (make_student(completed_courses={"CS101", "MATH101"}),
+             make_course(enrolled=0, prerequisites={"CS101", "MATH101"}),
+             "REGISTERED", "DT-13"),
+            (make_student(outstanding_dues=1, registered_courses={"C1"}),
+             make_course(enrolled=0),
+             "DUES_BLOCK", "DT-07"),
+            (make_student(registered_courses={"C1"}),
+             make_course(enrolled=0, prerequisites={"CS101"}),
+             "ALREADY_REGISTERED", "DT-08"),
+            (make_student(current_credits=16),
+             make_course(enrolled=0, prerequisites={"CS101"}),
+             "PREREQUISITES_MISSING", "DT-09"),
+            (make_student(current_credits=16),
+             make_course(capacity=10, enrolled=10),
+             "CREDIT_LIMIT", "DT-10"),
+        ],
+        ids=[
+            "ECP-07__BVA-11__DT-01_dues_blocks",
+            "BVA-10__BVA-22_zero_dues_register",
+            "ECP-09__DT-02_already_registered",
+            "ECP-13__DT-03_missing_prereq",
+            "DT-12_partial_prereq_missing",
+            "ECP-14__DT-04_credit_limit",
+            "ECP-10__BVA-16__DT-05_waitlisted",
+            "ECP-11__BVA-15__DT-06_registered",
+            "BVA-20_capacity1_enrolled0",
+            "BVA-21_capacity1_enrolled1",
+            "DT-11_fifteen_plus_three_registered",
+            "DT-13_all_prereqs_met",
+            "DT-07_dues_and_dup",
+            "DT-08_dup_and_missing_prereq",
+            "DT-09_prereq_and_credit",
+            "DT-10_credit_and_full",
+        ],
+    )
+    def test_registration_decision_status(student, course, expected, tag):
+        """FR-04..FR-09: decision statuses, priority order, and BVA boundaries."""
+>       assert registration_decision(student, course) == expected, tag
+E       AssertionError: DT-11
+E       assert 'CREDIT_LIMIT' == 'REGISTERED'
+E         
+E         - REGISTERED
+E         + CREDIT_LIMIT
+
+tests/test_blackbox.py:215: AssertionError
+____________ test_registration_decision_status[DT-07_dues_and_dup] _____________
+
+student = Student(student_id='S1', completed_courses=set(), current_credits=0, outstanding_dues=1, registered_courses={'C1'})
+course = Course(code='C1', credit_hours=3, capacity=10, enrolled=0, prerequisites=set(), waitlist=[])
+expected = 'DUES_BLOCK', tag = 'DT-07'
+
+    @pytest.mark.parametrize(
+        "student, course, expected, tag",
+        [
+            (make_student(outstanding_dues=1), make_course(enrolled=0),
+             "DUES_BLOCK", "ECP-07__BVA-11__DT-01"),
+            (make_student(outstanding_dues=0), make_course(enrolled=0),
+             "REGISTERED", "BVA-10__BVA-22"),
+            (make_student(registered_courses={"C1"}), make_course(enrolled=0),
+             "ALREADY_REGISTERED", "ECP-09__DT-02"),
+            (make_student(), make_course(enrolled=0, prerequisites={"CS101"}),
+             "PREREQUISITES_MISSING", "ECP-13__DT-03"),
+            (make_student(completed_courses={"CS101"}),
+             make_course(enrolled=0, prerequisites={"CS101", "MATH101"}),
+             "PREREQUISITES_MISSING", "DT-12"),
+            (make_student(current_credits=16), make_course(enrolled=0),
+             "CREDIT_LIMIT", "ECP-14__DT-04"),
+            (make_student(), make_course(capacity=10, enrolled=10),
+             "WAITLISTED", "ECP-10__BVA-16__DT-05"),
+            (make_student(), make_course(capacity=10, enrolled=9),
+             "REGISTERED", "ECP-11__BVA-15__DT-06"),
+            (make_student(), make_course(capacity=1, enrolled=0),
+             "REGISTERED", "BVA-20"),
+            (make_student(), make_course(capacity=1, enrolled=1),
+             "WAITLISTED", "BVA-21"),
+            (make_student(current_credits=15), make_course(enrolled=0),
+             "REGISTERED", "DT-11"),
+            (make_student(completed_courses={"CS101", "MATH101"}),
+             make_course(enrolled=0, prerequisites={"CS101", "MATH101"}),
+             "REGISTERED", "DT-13"),
+            (make_student(outstanding_dues=1, registered_courses={"C1"}),
+             make_course(enrolled=0),
+             "DUES_BLOCK", "DT-07"),
+            (make_student(registered_courses={"C1"}),
+             make_course(enrolled=0, prerequisites={"CS101"}),
+             "ALREADY_REGISTERED", "DT-08"),
+            (make_student(current_credits=16),
+             make_course(enrolled=0, prerequisites={"CS101"}),
+             "PREREQUISITES_MISSING", "DT-09"),
+            (make_student(current_credits=16),
+             make_course(capacity=10, enrolled=10),
+             "CREDIT_LIMIT", "DT-10"),
+        ],
+        ids=[
+            "ECP-07__BVA-11__DT-01_dues_blocks",
+            "BVA-10__BVA-22_zero_dues_register",
+            "ECP-09__DT-02_already_registered",
+            "ECP-13__DT-03_missing_prereq",
+            "DT-12_partial_prereq_missing",
+            "ECP-14__DT-04_credit_limit",
+            "ECP-10__BVA-16__DT-05_waitlisted",
+            "ECP-11__BVA-15__DT-06_registered",
+            "BVA-20_capacity1_enrolled0",
+            "BVA-21_capacity1_enrolled1",
+            "DT-11_fifteen_plus_three_registered",
+            "DT-13_all_prereqs_met",
+            "DT-07_dues_and_dup",
+            "DT-08_dup_and_missing_prereq",
+            "DT-09_prereq_and_credit",
+            "DT-10_credit_and_full",
+        ],
+    )
+    def test_registration_decision_status(student, course, expected, tag):
+        """FR-04..FR-09: decision statuses, priority order, and BVA boundaries."""
+>       assert registration_decision(student, course) == expected, tag
+E       AssertionError: DT-07
+E       assert 'ALREADY_REGISTERED' == 'DUES_BLOCK'
+E         
+E         - DUES_BLOCK
+E         + ALREADY_REGISTERED
+
+tests/test_blackbox.py:215: AssertionError
+__________________ test_register_course_SC02_waitlisted_state __________________
+
+    def test_register_course_SC02_waitlisted_state():
+        """SC-02 (FR-12): WAITLISTED appends ID, no other state change."""
+        s = make_student(current_credits=0)
+        c = make_course(credit_hours=3, capacity=10, enrolled=10, waitlist=[])
+        result = register_course(s, c)
+>       assert result == "WAITLISTED", "SC-02"
+E       AssertionError: SC-02
+E       assert 'REGISTERED' == 'WAITLISTED'
+E         
+E         - WAITLISTED
+E         + REGISTERED
+
+tests/test_blackbox.py:304: AssertionError
+_______________ test_register_course_SC03_waitlist_no_duplicate ________________
+
+    def test_register_course_SC03_waitlist_no_duplicate():
+        """SC-03 (FR-12): already in waitlist -> do not append again."""
+        s = make_student(student_id="S1")
+        c = make_course(credit_hours=3, capacity=10, enrolled=10, waitlist=["S1"])
+        result = register_course(s, c)
+>       assert result == "WAITLISTED", "SC-03"
+E       AssertionError: SC-03
+E       assert 'REGISTERED' == 'WAITLISTED'
+E         
+E         - WAITLISTED
+E         + REGISTERED
+
+tests/test_blackbox.py:316: AssertionError
+_ test_register_course_unsuccessful_no_state_change[SC-04_dues_block_unchanged] _
+
+student = Student(student_id='S1', completed_courses=set(), current_credits=3, outstanding_dues=1, registered_courses={'C1'})
+course = Course(code='C1', credit_hours=3, capacity=10, enrolled=1, prerequisites=set(), waitlist=[])
+expected_decision = 'DUES_BLOCK', tag = 'SC-04'
+
+    @pytest.mark.parametrize(
+        "student, course, expected_decision, tag",
+        [
+            (make_student(outstanding_dues=1), make_course(enrolled=0),
+             "DUES_BLOCK", "SC-04"),
+            (make_student(registered_courses={"C1"}), make_course(enrolled=0),
+             "ALREADY_REGISTERED", "SC-05"),
+            (make_student(), make_course(enrolled=0, prerequisites={"CS101"}),
+             "PREREQUISITES_MISSING", "SC-06"),
+            (make_student(current_credits=16), make_course(enrolled=0),
+             "CREDIT_LIMIT", "SC-07"),
+        ],
+        ids=[
+            "SC-04_dues_block_unchanged",
+            "SC-05_already_unchanged",
+            "SC-06_prereq_unchanged",
+            "SC-07_credit_unchanged",
+        ],
+    )
+    def test_register_course_unsuccessful_no_state_change(student, course, expected_decision, tag):
+        """FR-12: unsuccessful operations make no state changes."""
+        student_before = copy.deepcopy(student)
+        course_before = copy.deepcopy(course)
+        result = register_course(student, course)
+>       assert result == expected_decision, tag
+E       AssertionError: SC-04
+E       assert 'REGISTERED' == 'DUES_BLOCK'
+E         
+E         - DUES_BLOCK
+E         + REGISTERED
+
+tests/test_blackbox.py:344: AssertionError
+______________ test_register_course_SC10_exactly_eighteen_credits ______________
+
+    def test_register_course_SC10_exactly_eighteen_credits():
+        """SC-10 (FR-11): 15 + 3 = 18 must succeed with the full post-state."""
+        s = make_student(current_credits=15)
+        c = make_course(credit_hours=3, capacity=10, enrolled=0)
+        result = register_course(s, c)
+>       assert result == "REGISTERED", "SC-10"
+E       AssertionError: SC-10
+E       assert 'CREDIT_LIMIT' == 'REGISTERED'
+E         
+E         - REGISTERED
+E         + CREDIT_LIMIT
+
+tests/test_blackbox.py:354: AssertionError
+______________________ test_withdraw_course_SC08_enrolled ______________________
+
+    def test_withdraw_course_SC08_enrolled():
+        """SC-08 (FR-13): enrolled student is removed, credits drop, enrolled-1."""
+        s = make_student(registered_courses={"C1"}, current_credits=3)
+        c = make_course(credit_hours=3, capacity=10, enrolled=1)
+        result = withdraw_course(s, c)
+        assert result is True, "SC-08"
+        assert s.registered_courses == set(), "SC-08"
+        assert s.current_credits == 0, "SC-08"
+>       assert c.enrolled == 0, "SC-08"
+E       AssertionError: SC-08
+E       assert 1 == 0
+E        +  where 1 = Course(code='C1', credit_hours=3, capacity=10, enrolled=1, prerequisites=set(), waitlist=[]).enrolled
+
+tests/test_blackbox.py:371: AssertionError
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.14.4-final-0 ________________
+
+Name              Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------
+registration.py      53      2     26      2    95%   59, 71
+-------------------------------------------------------------
+TOTAL                53      2     26      2    95%
+=========================== short test summary info ============================
+FAILED tests/test_blackbox.py::test_check_credit_limit_returns[BVA-03_exactly_18_allowed]
+FAILED tests/test_blackbox.py::test_check_credit_limit_returns[BVA-18_fourteen_plus_four]
+FAILED tests/test_blackbox.py::test_prerequisites_satisfied[ECP-06_partial_missing]
+FAILED tests/test_blackbox.py::test_registration_decision_status[ECP-07__BVA-11__DT-01_dues_blocks]
+FAILED tests/test_blackbox.py::test_registration_decision_status[DT-12_partial_prereq_missing]
+FAILED tests/test_blackbox.py::test_registration_decision_status[ECP-10__BVA-16__DT-05_waitlisted]
+FAILED tests/test_blackbox.py::test_registration_decision_status[BVA-21_capacity1_enrolled1]
+FAILED tests/test_blackbox.py::test_registration_decision_status[DT-11_fifteen_plus_three_registered]
+FAILED tests/test_blackbox.py::test_registration_decision_status[DT-07_dues_and_dup]
+FAILED tests/test_blackbox.py::test_register_course_SC02_waitlisted_state - A...
+FAILED tests/test_blackbox.py::test_register_course_SC03_waitlist_no_duplicate
+FAILED tests/test_blackbox.py::test_register_course_unsuccessful_no_state_change[SC-04_dues_block_unchanged]
+FAILED tests/test_blackbox.py::test_register_course_SC10_exactly_eighteen_credits
+FAILED tests/test_blackbox.py::test_withdraw_course_SC08_enrolled - Assertion...
+=================== 14 failed, 58 passed, 2 skipped in 0.20s ===================
