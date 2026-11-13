@@ -1,0 +1,19 @@
+============================= test session starts ==============================
+platform linux -- Python 3.14.4, pytest-9.0.2, pluggy-1.6.0
+rootdir: /home/wahid/SQE-Assignment-2
+plugins: cov-7.1.0, typeguard-4.4.4
+collected 74 items
+
+tests/test_blackbox.py ................................................. [ 66%]
+......                                                                   [ 74%]
+tests/test_whitebox.py ........s......s...                               [100%]
+
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.14.4-final-0 ________________
+
+Name              Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------
+registration.py      54      0     26      0   100%
+-------------------------------------------------------------
+TOTAL                54      0     26      0   100%
+======================== 72 passed, 2 skipped in 0.11s =========================
